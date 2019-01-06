@@ -37,9 +37,9 @@ app.use(session({
     saveUninitialized: false
 }));
 
-if (!isProduction) {
-    app.use(errorHandler());
-}
+// if (!isProduction) {
+//     app.use(errorHandler());
+// }
 
 //Configure Mongoose
 // mongoose.connect(mongodUri, {
