@@ -91,10 +91,10 @@ const server = dgram.createSocket('udp4');
 const message = Buffer.from('Some bytes');
 const client = dgram.createSocket('udp4');
 
-const commonPort = 27851;//require('./commonPort');
+const commonPort = require('./commonPort');
 
 // const tarIP = '52.202.215.126';
-const tarIP = 'fast-sands-32919.herokuapp.com';
+const tarIP = '85.72.40.234';
 const punchthrough = () => {
     return new Promise((resolve, reject) => {
         client.send(message, commonPort, tarIP, (err) => {
