@@ -124,14 +124,14 @@ server.on('listening', () => {
 server.bind(37888);
 let i = 0;
 const interval = setInterval(() => {
-    if (i === 10) {
+    i++;
+    if (i > 1000) {
         console.log('closing');
         server.close();
         clearInterval(interval);
         process.exit(0);
     } else {
-        i++;
-        console.log(i);
+        (i % 10===0) && console.log(i);
     }
 }, 1000);
 // server listening 0.0.0.0:41234
