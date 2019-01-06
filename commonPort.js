@@ -1,2 +1,2 @@
-const port = 43788;
+const port = process.env.PORT;
 module.exports = port;

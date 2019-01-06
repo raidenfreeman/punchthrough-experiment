@@ -98,7 +98,7 @@ const tarIP = 'fast-sands-32919.herokuapp.com';
 const punchthrough = () => {
     return new Promise((resolve, reject) => {
         client.send(message, commonPort, tarIP, (err) => {
-            console.log('Sent some stuff!🎉🎉🎉🎉');
+            console.log('Sent some stuff!🎉 Closing client');
             client.close();
             if (err) {
                 console.log('💣💣💣💣💣');
@@ -112,7 +112,7 @@ const punchthrough = () => {
 }
 
 const everythingElse = () => {
-    console.log('send packet to', tarIP, ':', commonPort)
+    console.log('sent packet to', tarIP, ':', commonPort)
     server.on('error', (err) => {
         console.log(`server error:\n${err.stack}`);
         server.close();
@@ -131,7 +131,7 @@ const everythingElse = () => {
     let i = 0;
     const interval = setInterval(() => {
         i++;
-        if (i > 20) {
+        if (i > 2) {
             console.log('closing');
             server.close();
             clearInterval(interval);
