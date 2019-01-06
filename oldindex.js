@@ -91,21 +91,26 @@ const server = dgram.createSocket('udp4');
 const message = Buffer.from('Some bytes');
 const client = dgram.createSocket('udp4');
 
+const commonPort = require('./commonPort');
+
 const tarIP = '52.202.215.126';
 const punchthrough = () => {
     return new Promise((resolve, reject) => {
-        client.send(message, 41234, tarIP, (err) => {
+        client.send(message, commonPort, tarIP, (err) => {
+            console.log('Sent some stuff!🎉🎉🎉🎉');
             client.close();
             if (err) {
+                console.log('💣💣💣💣💣');
                 reject(err);
             } else {
+                console.log('🐤🐤🐤🐤🐤🐤');
                 resolve();
             }
         });
     })
 }
 
-// punchthrough().then(() => console.log('send packet to', tarIP, ':', 41234)).catch((err) => console.log('Caught error:', err));
+punchthrough().then(() => console.log('send packet to', tarIP, ':', commonPort)).catch((err) => console.log('Caught error:', err));
 
 server.on('error', (err) => {
     console.log(`server error:\n${err.stack}`);
@@ -121,7 +126,7 @@ server.on('listening', () => {
     console.log(`server listening ${address.address}:${address.port}`);
 });
 
-server.bind(3788);
+server.bind(commonPort);
 let i = 0;
 const interval = setInterval(() => {
     i++;
@@ -134,4 +139,4 @@ const interval = setInterval(() => {
         (i % 5===0) && console.log(i);
     }
 }, 1000);
-// server listening 0.0.0.0:41234
+// server listening 0.0.0.0:commonPort
