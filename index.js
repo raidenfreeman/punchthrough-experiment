@@ -149,6 +149,7 @@ server.on('listening', () => {
     console.log(`server listening ${address.address}:${address.port}`);
 });
 
+console.log('Started UDP server at ',commonPort);
 server.bind(commonPort);
 // let i = 0;
 // const interval = setInterval(() => {
