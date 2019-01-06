@@ -3,8 +3,8 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cors = require('cors');
-const mongoose = require('mongoose');
-const errorHandler = require('errorhandler');
+// const mongoose = require('mongoose');
+// const errorHandler = require('errorhandler');
 require('dotenv').config();
 // const mongodUri = process.env.MONGOD_URI;
 // if (!mongodUri) {
@@ -12,7 +12,7 @@ require('dotenv').config();
 // }
 
 //Configure mongoose's promise to global promise
-mongoose.promise = global.Promise;
+// mongoose.promise = global.Promise;
 
 //Configure isProduction variable
 const isProduction = process.env.NODE_ENV === 'production';
@@ -83,6 +83,9 @@ app.use(session({
 // });
 
 const router = require('express').Router();
+router.get('/', (req, res, next) => {
+    res.send(`<h2>${server.address()}</h2><p>hello, these are the registered rooms:</p><p>${registered}</p>`);
+})
 router.get('/registered', (req, res, next) => {
     if (registered) {
         console.log('Queried for rooms');
@@ -97,9 +100,9 @@ router.get('/registered', (req, res, next) => {
         });
     }
 });
-// app.use('/', router);
+app.use('/', router);
 const envPort = process.env.PORT;
-// app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
+app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
 
 
 const dgram = require('dgram');
@@ -126,7 +129,7 @@ server.on('listening', () => {
     console.log(`server listening ${address.address}:${address.port}`);
 });
 
-console.log('Started UDP server at ',commonPort);
+console.log('Started UDP server at ', commonPort);
 server.bind(commonPort);
 // let i = 0;
 // const interval = setInterval(() => {
