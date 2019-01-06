@@ -6,10 +6,10 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const errorHandler = require('errorhandler');
 require('dotenv').config();
-const mongodUri = process.env.MONGOD_URI;
-if (!mongodUri) {
-    throw new Error('💣 MongoDB URI environment variable missing');
-}
+// const mongodUri = process.env.MONGOD_URI;
+// if (!mongodUri) {
+//     throw new Error('💣 MongoDB URI environment variable missing');
+// }
 
 //Configure mongoose's promise to global promise
 mongoose.promise = global.Promise;
@@ -42,20 +42,20 @@ if (!isProduction) {
 }
 
 //Configure Mongoose
-mongoose.connect(mongodUri, {
-    useMongoClient: true,
-    promiseLibrary: global.Promise
-});
-mongoose.set('debug', true);
+// mongoose.connect(mongodUri, {
+//     useMongoClient: true,
+//     promiseLibrary: global.Promise
+// });
+// mongoose.set('debug', true);
 
-require('./models/users');
-require('./config/passport');
-app.use(require('./routes'));
+// require('./models/users');
+// require('./config/passport');
+// app.use(require('./routes'));
 
 
 //Error handlers & middlewares
-mongoose.connect('mongodb://localhost/passport-tutorial');
-mongoose.set('debug', true);
+// mongoose.connect('mongodb://localhost/passport-tutorial');
+// mongoose.set('debug', true);
 
 //Error handlers & middlewares
 // if (!isProduction) {
