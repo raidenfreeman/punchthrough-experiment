@@ -121,7 +121,7 @@ server.on('listening', () => {
     console.log(`server listening ${address.address}:${address.port}`);
 });
 
-server.bind(26445);
+server.bind(3788);
 let i = 0;
 const interval = setInterval(() => {
     i++;
