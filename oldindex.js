@@ -91,7 +91,7 @@ const server = dgram.createSocket('udp4');
 const message = Buffer.from('Some bytes');
 const client = dgram.createSocket('udp4');
 
-const commonPort = require('./commonPort');
+const commonPort = 27851;//require('./commonPort');
 
 // const tarIP = '52.202.215.126';
 const tarIP = 'fast-sands-32919.herokuapp.com';

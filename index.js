@@ -97,37 +97,15 @@ router.get('/registered', (req, res, next) => {
         });
     }
 });
-app.use('/', router);
+// app.use('/', router);
 const envPort = process.env.PORT;
-app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
+// app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
 
 
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 
-const message = Buffer.from('Some bytes');
-const client = dgram.createSocket('udp4');
-
 const commonPort = require('./commonPort');
-
-// const tarIP = '52.202.215.126';
-// const punchthrough = () => {
-//     return new Promise((resolve, reject) => {
-//         client.send(message, commonPort, tarIP, (err) => {
-//             console.log('Sent some stuff!🎉🎉🎉🎉');
-//             client.close();
-//             if (err) {
-//                 console.log('💣💣💣💣💣');
-//                 reject(err);
-//             } else {
-//                 console.log('🐤🐤🐤🐤🐤🐤');
-//                 resolve();
-//             }
-//         });
-//     })
-// }
-
-// punchthrough().then(() => console.log('send packet to', tarIP, ':', commonPort)).catch((err) => console.log('Caught error:', err));
 
 server.on('error', (err) => {
     console.log(`server error:\n${err.stack}`);
@@ -142,7 +120,6 @@ server.on('message', (msg, rinfo) => {
         registered = rinfo;
     }
 });
-
 
 server.on('listening', () => {
     const address = server.address();
