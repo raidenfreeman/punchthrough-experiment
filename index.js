@@ -22,7 +22,7 @@ const app = express();
 
 //Configure our app
 app.use(cors());
-app.use(require('morgan')('dev'));
+// app.use(require('morgan')('dev'));
 app.use(bodyParser.urlencoded({
     extended: false
 }));

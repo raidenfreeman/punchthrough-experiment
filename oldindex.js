@@ -93,7 +93,8 @@ const client = dgram.createSocket('udp4');
 
 const commonPort = require('./commonPort');
 
-const tarIP = '52.202.215.126';
+// const tarIP = '52.202.215.126';
+const tarIP = 'fast-sands-32919.herokuapp.com';
 const punchthrough = () => {
     return new Promise((resolve, reject) => {
         client.send(message, commonPort, tarIP, (err) => {
@@ -110,33 +111,36 @@ const punchthrough = () => {
     })
 }
 
-punchthrough().then(() => console.log('send packet to', tarIP, ':', commonPort)).catch((err) => console.log('Caught error:', err));
-
-server.on('error', (err) => {
-    console.log(`server error:\n${err.stack}`);
-    server.close();
-});
-
-server.on('message', (msg, rinfo) => {
-    console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-});
-
-server.on('listening', () => {
-    const address = server.address();
-    console.log(`server listening ${address.address}:${address.port}`);
-});
-
-server.bind(commonPort);
-let i = 0;
-const interval = setInterval(() => {
-    i++;
-    if (i > 20) {
-        console.log('closing');
+const everythingElse = () => {
+    console.log('send packet to', tarIP, ':', commonPort)
+    server.on('error', (err) => {
+        console.log(`server error:\n${err.stack}`);
         server.close();
-        clearInterval(interval);
-        process.exit(0);
-    } else {
-        (i % 5===0) && console.log(i);
-    }
-}, 1000);
-// server listening 0.0.0.0:commonPort
+    });
+    
+    server.on('message', (msg, rinfo) => {
+        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+    });
+    
+    server.on('listening', () => {
+        const address = server.address();
+        console.log(`server listening ${address.address}:${address.port}`);
+    });
+    
+    server.bind(commonPort);
+    let i = 0;
+    const interval = setInterval(() => {
+        i++;
+        if (i > 20) {
+            console.log('closing');
+            server.close();
+            clearInterval(interval);
+            process.exit(0);
+        } else {
+            (i % 5 === 0) && console.log(i);
+        }
+    }, 1000);
+    // server listening 0.0.0.0:commonPort
+
+}
+punchthrough().then(everythingElse).catch((err) => console.log('Caught error:', err));
