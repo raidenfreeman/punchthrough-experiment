@@ -121,17 +121,17 @@ server.on('listening', () => {
     console.log(`server listening ${address.address}:${address.port}`);
 });
 
-server.bind(37888);
+server.bind(26445);
 let i = 0;
 const interval = setInterval(() => {
     i++;
-    if (i > 1000) {
+    if (i > 20) {
         console.log('closing');
         server.close();
         clearInterval(interval);
         process.exit(0);
     } else {
-        (i % 10===0) && console.log(i);
+        (i % 5===0) && console.log(i);
     }
 }, 1000);
 // server listening 0.0.0.0:41234
