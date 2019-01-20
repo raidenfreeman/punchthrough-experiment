@@ -43,8 +43,14 @@ const rooms = {};
 const router = require('express').Router();
 
 router.get('/', (req, res, next) => {
-    let responseHTML = `<!doctype html><html><body><h2>Room server at ${server.address()}</h2><h3>These are the registered rooms:</h3>`;
-    responseHTML = Object.values(rooms).reduce((responseHTML, room) => responseHTML + `<p>${JSON.stringify(room)}</p>`);
+    let responseHTML = `<!doctype html><html><body><h2>Room server at ${server.address().address}</h2>`;
+    const roomsArray = Object.values(rooms);
+    if (roomsArray && roomsArray.length) {
+        responseHTML += `<h3>These are the registered rooms:</h3>`;
+        responseHTML = roomsArray.reduce((html, room) => html + `<p>${JSON.stringify(room)}</p>`, responseHTML);
+    } else {
+        responseHTML += `<h3>There are no registered rooms 🤷‍♂️</h3>`;
+    }
     responseHTML += `</body></html>`;
     res.send(responseHTML);
 })
@@ -54,8 +60,10 @@ router.get('/rooms', (req, res, next) => {
     if (rooms) {
         console.log('Queried for rooms');
         res.status(200).json(Object.values(rooms).map(x => convertRoomToSend(x)));
+        return;
     } else {
         res.status(404).json({});
+        return;
     }
 });
 
@@ -67,11 +75,13 @@ const validateOwner = ({
     privatePort
 }) => {
     if (!name) {
+        console.error(name);
         return false;
     }
     const isIP = require('net').isIPv4;
     const isValidPort = (port) => (+port) < 65536 && (+port) > 0 && port === (+port).toString();
     if (!(isIP(publicIP) && isIP(privateIP) && isValidPort(publicPort) && isValidPort(privatePort))) {
+        console.error(isIP(publicIP), publicPort, isIP(privateIP), privatePort);
         return false;
     }
     return true;
@@ -83,12 +93,15 @@ const validateRoom = ({
     maxClients
 }) => {
     if (!(maxClients && maxClients > 1)) {
+        console.error(maxClients);
         return false;
     }
     if (!name) {
+        console.error(name);
         return false;
     }
     if (!(owner && validateOwner(owner))) {
+        console.error(JSON.stringify(owner));
         return false;
     }
     return true;
@@ -98,22 +111,17 @@ const validateRoom = ({
 
 // Create a room
 router.post('/register', (req, res) => {
-    try {
-        const {
-            name,
-            owner,
-            maxClients
-        } = req.body;
-    } catch (e) {
-
-        res.status(400);
-        return;
-    }
+    const {
+        name,
+        owner,
+        maxClients
+    } = req.body;
 
     // Check if it already exists
-    const existingRoom = rooms.filter(x => x.owner === owner).find(x => x.name === name);
+    const existingRoom = Object.values(rooms).filter(x => x.owner.name === owner.name).find(x => x.name === name);
     if (existingRoom) {
         res.status(409).json(convertRoomToSend(existingRoom));
+        return;
     }
     const room = {
         name,
@@ -126,9 +134,13 @@ router.post('/register', (req, res) => {
         rooms[room.id] = room;
         // Created resource
         res.status(201).json(convertRoomToSend(room));
+        return;
     } else {
         // Bad request
-        res.status(400);
+        res.status(400).json({
+            error: "Invalid Room"
+        });
+        return;
     }
 });
 
@@ -173,5 +185,5 @@ const clearTimedOutRooms = setInterval(() => {
 router.get
 
 app.use('/', router);
-const envPort = process.env.PORT;
-app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
+const envPort = process.env.PORT || 5000;
+const server = app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
