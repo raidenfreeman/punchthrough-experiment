@@ -3,19 +3,9 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cors = require('cors');
-// const mongoose = require('mongoose');
-// const errorHandler = require('errorhandler');
+
+const uuid = require('uuid/v4');
 require('dotenv').config();
-// const mongodUri = process.env.MONGOD_URI;
-// if (!mongodUri) {
-//     throw new Error('💣 MongoDB URI environment variable missing');
-// }
-
-//Configure mongoose's promise to global promise
-// mongoose.promise = global.Promise;
-
-//Configure isProduction variable
-const isProduction = process.env.NODE_ENV === 'production';
 
 //Initiate our app
 const app = express();
@@ -37,60 +27,17 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// if (!isProduction) {
-//     app.use(errorHandler());
-// }
-
-//Configure Mongoose
-// mongoose.connect(mongodUri, {
-//     useMongoClient: true,
-//     promiseLibrary: global.Promise
-// });
-// mongoose.set('debug', true);
-
-// require('./models/users');
-// require('./config/passport');
-// app.use(require('./routes'));
-
-
-//Error handlers & middlewares
-// mongoose.connect('mongodb://localhost/passport-tutorial');
-// mongoose.set('debug', true);
-
-//Error handlers & middlewares
-// if (!isProduction) {
-//     app.use((err, req, res) => {
-//         res.status(err.status || 500);
-
-//         res.json({
-//             errors: {
-//                 message: err.message,
-//                 error: err,
-//             },
-//         });
-//     });
-// }
-
-// app.use((err, req, res) => {
-//     res.status(err.status || 500);
-
-//     res.json({
-//         errors: {
-//             message: err.message,
-//             error: {},
-//         },
-//     });
-// });
-
 const router = require('express').Router();
 router.get('/', (req, res, next) => {
     res.send(`<h2>${server.address()}</h2><p>hello, these are the registered rooms:</p><p>${registered}</p>`);
 })
-router.get('/registered', (req, res, next) => {
-    if (registered) {
+
+const rooms = [];
+router.get('/rooms', (req, res, next) => {
+    if (rooms && rooms.length) {
         console.log('Queried for rooms');
         console.log(`Replying: server,${registered.address},${registered.port}`);
-        res.json(registered);
+        res.json(rooms);
         // server.send(Buffer.from(`server,${registered.address},${registered.port}`), rinfo.port, rinfo.address);
     } else {
         res.json({
@@ -99,48 +46,121 @@ router.get('/registered', (req, res, next) => {
             unset: true
         });
     }
+    res.status(200);
 });
-app.use('/', router);
-const envPort = process.env.PORT;
-app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));
 
+const validateOwner = ({
+    name,
+    publicIP,
+    publicPort,
+    privateIP,
+    privatePort
+}) => {
+    if (!name) {
+        return false;
+    }
+    const isIP = require('net').isIPv4;
+    const isValidPort = (port) => (+port) < 65536 && (+port) > 0 && port === (+port).toString();
+    if (!(isIP(publicIP) && isIP(privateIP) && isValidPort(publicPort) && isValidPort(privatePort))) {
+        return false;
+    }
+    return true;
+}
 
-const dgram = require('dgram');
-const server = dgram.createSocket('udp4');
+const validateRoom = ({
+    name,
+    owner,
+    maxClients
+}) => {
+    if (!(maxClients && maxClients > 1)) {
+        return false;
+    }
+    if (!name) {
+        return false;
+    }
+    if (!(owner && validateOwner(owner))) {
+        return false;
+    }
+    return true;
+}
 
-const commonPort = require('./commonPort');
+// TODO: All rooms should use user tokens, so that someone knowing the username & room name, can't modify them
 
-server.on('error', (err) => {
-    console.log(`server error:\n${err.stack}`);
-    server.close();
+const convertRoomToSend = ({
+    name,
+    owner,
+    maxClients,
+    id
+}) => ({
+    name,
+    owner,
+    maxClients,
+    id
 });
-let registered;
-server.on('message', (msg, rinfo) => {
-    console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-    const str = msg.toString();
-    if (str === 'register') {
-        console.log('Registering', rinfo);
-        registered = rinfo;
+// Create a room
+router.post('/register', (req, res) => {
+    try {
+        const {
+            name,
+            owner,
+            maxClients
+        } = req.body;
+    } catch (e) {
+
+        res.status(400);
+        return;
+    }
+
+    // Check if it already exists
+    const existingRoom = rooms.filter(x => x.owner === owner).find(x => x.name === name);
+    if (existingRoom) {
+        res.status(409).json(convertRoomToSend(existingRoom));
+    }
+    const room = {
+        name,
+        owner,
+        maxClients,
+        id: uuid(),
+        lastUpdate: Date.now()
+    };
+    if (validateRoom(room)) {
+        rooms[room.id] = room;
+        // Created resource
+        res.status(201).json(convertRoomToSend(room));
+    } else {
+        // Bad request
+        res.status(400);
     }
 });
 
-server.on('listening', () => {
-    const address = server.address();
-    console.log(`server listening ${address.address}:${address.port}`);
+router.post('/keepalive', (req, res) => {
+    const room = rooms[req.body.id];
+    if (!room) {
+        res.status(404);
+        return;
+    } else {
+        room.lastUpdate = Date.now();
+        res.status(200);
+        return;
+    }
 });
 
-console.log('Started UDP server at ', commonPort);
-server.bind(commonPort);
-// let i = 0;
-// const interval = setInterval(() => {
-//     i++;
-//     if (i > 20) {
-//         console.log('closing');
-//         server.close();
-//         clearInterval(interval);
-//         // process.exit(0);
-//     } else {
-//         (i % 5 === 0) && console.log(i);
-//     }
-// }, 1000);
-// server listening 0.0.0.0:commonPort
+router.post('/close', (req, res) => {
+    const room = rooms[req.body.id];
+    if (!room) {
+        res.status(404);
+        return;
+    } else {
+        delete rooms[req.body.id];
+        res.status(200);
+        return;
+    }
+});
+
+router.get('/rooms', (req, res) => {
+    res.json(rooms.map(x => convertRoomToSend(x)));
+});
+
+app.use('/', router);
+const envPort = process.env.PORT;
+app.listen(envPort, () => console.log(`🖥 👍  Server running on http://localhost:${envPort}/`));

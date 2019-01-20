@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/65d9e9d9-6fa7-4d37-ac83-8f8fea201f82/resourceGroups/mediator-server/providers/Microsoft.Web/sites/mediator-server",
+    "appService.deploySubpath": ""
+}
