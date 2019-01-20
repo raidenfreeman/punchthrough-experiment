@@ -27,26 +27,36 @@ app.use(session({
     saveUninitialized: false
 }));
 
+const convertRoomToSend = ({
+    name,
+    owner,
+    maxClients,
+    id
+}) => ({
+    name,
+    owner,
+    maxClients,
+    id
+});
+
+const rooms = {};
 const router = require('express').Router();
+
 router.get('/', (req, res, next) => {
-    res.send(`<h2>${server.address()}</h2><p>hello, these are the registered rooms:</p><p>${registered}</p>`);
+    let responseHTML = `<!doctype html><html><body><h2>Room server at ${server.address()}</h2><h3>These are the registered rooms:</h3>`;
+    responseHTML = Object.values(rooms).reduce((responseHTML, room) => responseHTML + `<p>${JSON.stringify(room)}</p>`);
+    responseHTML += `</body></html>`;
+    res.send(responseHTML);
 })
 
-const rooms = [];
+
 router.get('/rooms', (req, res, next) => {
-    if (rooms && rooms.length) {
+    if (rooms) {
         console.log('Queried for rooms');
-        console.log(`Replying: server,${registered.address},${registered.port}`);
-        res.json(rooms);
-        // server.send(Buffer.from(`server,${registered.address},${registered.port}`), rinfo.port, rinfo.address);
+        res.status(200).json(Object.values(rooms).map(x => convertRoomToSend(x)));
     } else {
-        res.json({
-            address: '',
-            port: '',
-            unset: true
-        });
+        res.status(404).json({});
     }
-    res.status(200);
 });
 
 const validateOwner = ({
@@ -86,17 +96,6 @@ const validateRoom = ({
 
 // TODO: All rooms should use user tokens, so that someone knowing the username & room name, can't modify them
 
-const convertRoomToSend = ({
-    name,
-    owner,
-    maxClients,
-    id
-}) => ({
-    name,
-    owner,
-    maxClients,
-    id
-});
 // Create a room
 router.post('/register', (req, res) => {
     try {
@@ -157,9 +156,21 @@ router.post('/close', (req, res) => {
     }
 });
 
-router.get('/rooms', (req, res) => {
-    res.json(rooms.map(x => convertRoomToSend(x)));
-});
+const roomTimeout = 10000;
+
+const clearTimedOutRooms = setInterval(() => {
+    const now = Date.now();
+    Object.keys(rooms).forEach(key => {
+        const room = rooms[key];
+        if (roomTimeout < now - room.lastUpdate) {
+            // TODO: Is that 100% safe?
+            // I'm returning a new array and iterating over it, delete shouldn't affect it
+            delete rooms[key];
+        }
+    })
+}, roomTimeout);
+
+router.get
 
 app.use('/', router);
 const envPort = process.env.PORT;
